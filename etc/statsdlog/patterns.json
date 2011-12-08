@@ -1,0 +1,9 @@
+{
+"error.proxy.timeout.object": ".*ERROR with Object server.*ConnectionTimeout.*", 
+"error.proxy.code.400": ".*code 400.*", 
+"error.proxy.timeout.memcache": ".*Timeout talking to memcached.*", 
+"error.proxy.connect.memcache": ".*Error connecting to memcached.*", 
+"error.object.timeout.containerupdate": "object-server ERROR container update failed with", 
+"notice.restart": ".*SIGTERM received.*", 
+"error.proxy.locktimeout.put": ".*error with PUT.*LockTimeout.*"
+}
