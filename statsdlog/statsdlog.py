@@ -9,12 +9,13 @@ try:
 except ImportError:
     import json
 #via swift.common.utils
-# logging doesn't import patched as cleanly as one would like
+#logging doesn't import patched as cleanly as one would like
 from logging.handlers import SysLogHandler
 import logging
 logging.thread = eventlet.green.thread
 logging.threading = eventlet.green.threading
 logging._lock = logging.threading.RLock()
+from sys import maxint
 import optparse
 import sys
 import re
@@ -31,22 +32,22 @@ class StatsdLog(object):
         self.formatter = logging.Formatter('%(name)s: %(message)s')
         self.syslog.setFormatter(self.formatter)
         self.logger.addHandler(self.syslog)
-        
+
         if conf.get('debug', False) in TRUE_VALUES:
             self.debug = True
         else:
             self.debug = False
-        
+
         self.statsd_host = conf.get('statsd_host', '127.0.0.1')
         self.statsd_port = int(conf.get('statsd_port', '8125'))
         self.listen_addr = conf.get('listen_addr', '127.0.0.1')
         self.listen_port = int(conf.get('listen_port', 8126))
-        
+
         if conf.get('mgmt_enabled', False) in TRUE_VALUES:
             self.mgmt = True
         else:
             self.mgmt = False
-        
+
         self.mgmt_addr = conf.get('mgmt_addr', '127.0.0.1')
         self.mgmt_port = int(conf.get('mgmt_port', 8127))
         self.buff = int(conf.get('buffer_size', 8192))
@@ -58,27 +59,36 @@ class StatsdLog(object):
         self.q = Queue(maxsize=self.max_q_size)
         # key: regex
         self.patterns_file = conf.get('patterns_file', 'patterns.json')
-        
+
         try:
-            with open(self.patterns_file) as f:
-                self.patterns = json.loads(f.read())
-        except Exception as e:
-            self.logger.critical(e)
-            print e
+            with open(self.patterns_file) as pfile:
+                self.patterns = json.loads(pfile.read())
+        except Exception as err:
+            self.logger.critical(err)
+            print err
             sys.exit(1)
-        
+
         self.statsd_addr = (self.statsd_host, self.statsd_port)
         self.comp_patterns = {}
         for item in self.patterns:
             self.comp_patterns[item] = re.compile(self.patterns[item])
 
     def check_line(self, line):
+        """
+        Check if a line matches our search patterns.
+        
+        :param line: The string to check
+        :returns: None or regex entry that matched
+        """
         for entry in self.comp_patterns:
             if self.comp_patterns[entry].match(line):
                 return entry
         return None
 
     def stats_print(self):
+        """
+        Periodically dump some stats to the logs.
+        """
         lastcount = 0
         lasthit = 0
         while True:
@@ -95,6 +105,11 @@ class StatsdLog(object):
                     self.skip_counter)
 
     def send_event(self, payload):
+        """
+        Fire event to statsd
+        
+        :param payload: The payload of the udp packet to send.
+        """
         try:
             self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.udp_socket.sendto(payload, self.statsd_addr)
@@ -105,6 +120,9 @@ class StatsdLog(object):
     def statsd_counter_increment(self, stats, delta=1):
         """
         Increment multiple statsd stats counters
+        
+        :param stats: list of stats items to package and send 
+        :param delta: delta of stats items
         """
         if self.statsd_sample_rate < 1:
             if random() <= self.statsd_sample_rate:
@@ -118,6 +136,9 @@ class StatsdLog(object):
                 self.send_event(payload)
 
     def mgmt_app(self, env, start_response):
+        """
+        Ghetto wsgi stats interface
+        """
         if env['PATH_INFO'] == '/stats':
             start_response('200 OK', [('Content-Type', 'text/plain')])
             body = 'totals: %d hits - %d lines\r\n' % (self.hits, self.counter)
@@ -131,16 +152,24 @@ class StatsdLog(object):
             self.mgmt_app)
 
     def worker(self):
+        """
+        Check for and process log lines in queue
+        """
         while True:
             msg = self.q.get()
             matched = self.check_line(msg)
             if matched:
                 self.statsd_counter_increment([matched])
+                if self.hits >= maxint:
+                    self.hits = 0
                 self.hits += 1
             else:
                 pass
 
     def listener(self):
+        """
+        syslog udp listener
+        """
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         bind_addr = (self.listen_addr, self.listen_port)
         sock.bind(bind_addr)
@@ -152,13 +181,20 @@ class StatsdLog(object):
             else:
                 if self.q.qsize() < self.max_q_size:
                     self.q.put(data)
+                    if self.counter >= maxint:
+                        self.counter = 0
                     self.counter += 1
                 else:
                     if self.debug:
                         self.logger.notice("max log lines in queue, skipping")
+                    if self.skip_counter >= maxint:
+                        self.skip_counter = 0
                     self.skip_counter += 1
 
     def start(self):
+        """
+        Start the listener, worker, and mgmt server.
+        """
         eventlet.spawn_n(self.worker)
         if self.debug:
             eventlet.spawn_n(self.stats_print)
@@ -167,13 +203,19 @@ class StatsdLog(object):
         while True:
             try:
                 self.listener()
-            except Exception as e:
-                self.logger.error(e)
+            except Exception as err:
+                self.logger.error(err)
 
 
 class StatsdLogd(Daemon):
+    """
+    Statsdlog Daemon
+    """
 
     def run(self, conf):
+        """
+        Startup statsdlog server
+        """
         tap = StatsdLog(conf)
         tap.start()
 
@@ -188,16 +230,16 @@ def run_server():
     args.add_option('--conf', default="./statsdlogd.conf",
         help="path to config. default = ./statsdlogd.conf")
     options, arguments = args.parse_args()
-    
+
     if len(sys.argv) <= 1:
         args.print_help()
-    
+
     if options.foreground:
         conf = readconf(options.conf)
         tap = StatsdLog(conf['main'])
         tap.start()
         sys.exit(0)
-    
+
     if len(sys.argv) >= 2:
         daemon = StatsdLogd('/tmp/statsdlogd.pid')
         if 'start' == sys.argv[1]:
