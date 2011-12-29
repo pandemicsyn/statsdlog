@@ -1,6 +1,11 @@
 from setuptools import setup, find_packages
+from statsdlog import __version__ as version
 
-from informant import __version__ as version
+install_requires = []
+try:
+    import eventlet
+except ImportError:
+    install_requires.append("eventlet")
 
 name = "statsdlog"
 
@@ -21,6 +26,6 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Environment :: No Input/Output (Daemon)',
         ],
-    install_requires=[],
+    install_requires=install_requires,
     scripts=['bin/statsdlog-server']
     )

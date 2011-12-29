@@ -1,6 +1,6 @@
 # statsdlog #
 
-Simple daemon that consumes a syslog udp stream and generates statsd events based on the log lines it see's.
+Simple daemon that consumes a syslog udp stream and generates statsd events when certain log lines are encountered.
 
 ### Configuration ###
 
@@ -26,7 +26,7 @@ statsdlog sample config:
  - Point syslog udp stream to 127.0.0.1:8126
  - Profit
 
-It's important to note that the first match wins. An event will only be fired for the first match.
+Its important to note that the first match wins. An event will only be fired for the first match.
 
 The included patterns.json example includes a few patterns for errors commonly encountered when running [swift](http://github.com/openstack/swift)
 
@@ -34,8 +34,8 @@ The included patterns.json example includes a few patterns for errors commonly e
 
 Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install stdeb):
     
-    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.2
-    cd statsdlog-0.0.2
-    git checkout 0.0.2
+    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.3
+    cd statsdlog-0.0.3
+    git checkout 0.0.3
     python setup.py --command-packages=stdeb.command bdist_deb
-    dpkg -i deb_dist/python-statsdlog_0.0.2-1_all.deb
+    dpkg -i deb_dist/python-statsdlog_0.0.3-1_all.deb
