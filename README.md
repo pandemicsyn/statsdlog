@@ -13,9 +13,6 @@ statsdlog sample config:
     #statsd_sample_rate = 1.0
     #listen_addr = 127.0.0.1
     #listen_port = 8126
-    #mgmt_enabled = true
-    #mgmt_addr = 127.0.0.1
-    #mgmt_port = 8127
     #buffer_size = 8192
     #max_line_backlog = 512
     # file that contains your log search patterns and statsd event names
