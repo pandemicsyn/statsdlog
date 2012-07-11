@@ -1,0 +1,32 @@
+#! /bin/sh
+# /etc/init.d/statsdlog
+
+### BEGIN INIT INFO
+# Provides:          statsdlog
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the statsdlog server
+# Description:       starts the statsdlog server using start-stop-daemon
+### END INIT INFO
+
+STASDPY_USER=nast
+
+# Carry out specific functions when asked to by the system
+case "$1" in
+    start)
+        echo "Starting statsdlog "
+        su $STATSDPY_USR -c "/usr/bin/statsdlog-server start --conf=/etc/statsdlog/statsdlog.conf"
+        ;;
+    stop)
+        echo "Stopping statsdlog"
+        su $STATSDPY_USR -c "/usr/bin/statsdlog-server stop --conf=/etc/statsdlog/statsdlog.conf"
+        ;;
+    *)
+        echo "Usage: /etc/init.d/statsdlog {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

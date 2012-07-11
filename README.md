@@ -7,7 +7,7 @@ Simple daemon that consumes a syslog udp stream and generates statsd events when
 statsdlog sample config:
 
     [main]
-    debug = true
+    #debug = false
     #statsd_host = 127.0.0.1
     #statsd_port = 8125
     #statsd_sample_rate = 1.0
@@ -15,6 +15,10 @@ statsdlog sample config:
     #listen_port = 8126
     #buffer_size = 8192
     #max_line_backlog = 512
+    #report internals stats about statsdlog to statsd
+    #report_internal_stats = false
+    # if enabled report internal stats every 5 seconds
+    #internal_stats_interval = 5
     # file that contains your log search patterns and statsd event names
     patterns_file = /etc/statsdlog/patterns.json
 
@@ -31,8 +35,8 @@ The included patterns.json example includes a few patterns for errors commonly e
 
 Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install stdeb):
     
-    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.3
-    cd statsdlog-0.0.3
-    git checkout 0.0.3
+    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.5
+    cd statsdlog-0.0.5
+    git checkout 0.0.5
     python setup.py --command-packages=stdeb.command bdist_deb
-    dpkg -i deb_dist/python-statsdlog_0.0.3-1_all.deb
+    dpkg -i deb_dist/python-statsdlog_0.0.5-1_all.deb

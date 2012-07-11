@@ -1,5 +1,5 @@
 [main]
-debug = true
+#debug = false
 #statsd_host = 127.0.0.1
 #statsd_port = 8125
 #statsd_sample_rate = 1.0
@@ -7,5 +7,9 @@ debug = true
 #listen_port = 8126
 #buffer_size = 8192
 #max_line_backlog = 512
+# report internals stats about statsdlog to statsd
+report_internal_stats = true
+# if enabled report internal stats every 5 seconds
+#internal_stats_interval = 5
 # file that contains your log search patterns and statsd event names
 patterns_file = /etc/statsdlog/patterns.json

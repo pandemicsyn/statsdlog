@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-from ConfigParser import ConfigParser, NoSectionError, NoOptionError, \
-    RawConfigParser
-from signal import SIGTERM
+from ConfigParser import ConfigParser, RawConfigParser
 import atexit
 import sys
 import os
@@ -40,7 +38,7 @@ def readconf(conffile, section_name=None, log_name=None, defaults=None,
             conf = dict(c.items(section_name))
         else:
             print ("Unable to find %s config section in %s") % \
-                 (section_name, conffile)
+                  (section_name, conffile)
             sys.exit(1)
         if "log_name" not in conf:
             if log_name is not None:
@@ -66,7 +64,7 @@ class Daemon:
     """
 
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null',
-                stderr='/dev/null'):
+                 stderr='/dev/null'):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -84,8 +82,8 @@ class Daemon:
                 # exit first parent
                 sys.exit(0)
         except OSError, err:
-            sys.stderr.write("fork #1 failed: %d (%s)\n" % \
-                    (err.errno, err.strerror))
+            sys.stderr.write("fork #1 failed: %d (%s)\n" %
+                             (err.errno, err.strerror))
             sys.exit(1)
 
         # decouple from parent environment
@@ -100,8 +98,8 @@ class Daemon:
                 # exit from second parent
                 sys.exit(0)
         except OSError, err:
-            sys.stderr.write("fork #2 failed: %d (%s)\n" % \
-                    (err.errno, err.strerror))
+            sys.stderr.write("fork #2 failed: %d (%s)\n" %
+                             (err.errno, err.strerror))
             sys.exit(1)
 
         # redirect standard file descriptors
@@ -128,9 +126,9 @@ class Daemon:
         """
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile, 'r')
-            pid = int(pf.read().strip())
-            pf.close()
+            pidfile = file(self.pidfile, 'r')
+            pid = int(pidfile.read().strip())
+            pidfile.close()
         except IOError:
             pid = None
 
@@ -149,13 +147,13 @@ class Daemon:
         """
         # Get the pid from the pidfile
         try:
-            pf = file(self.pidfile, 'r')
-            pid = int(pf.read().strip())
-            pf.close()
+            pidfile = file(self.pidfile, 'r')
+            pid = int(pidfile.read().strip())
+            pidfile.close()
         except IOError:
             pid = None
 
         if not pid:
             message = "pidfile %s does not exist. Daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
-            return # not an error in a restart
+            return  # not an error in a restart

@@ -1,7 +1,7 @@
 import eventlet
 from eventlet.green import socket
 from eventlet.queue import Queue
-from daemonutils import Daemon, readconf
+from statsdlog.daemonutils import Daemon, readconf
 from random import random
 try:
     import simplejson as json
@@ -20,7 +20,7 @@ class StatsdLog(object):
     def __init__(self, conf):
         TRUE_VALUES = set(('true', '1', 'yes', 'on', 't', 'y'))
         self.conf = conf
-        self.logger = logging.getLogger('statsdLog')
+        self.logger = logging.getLogger('statsdlogd')
         self.logger.setLevel(logging.INFO)
         self.syslog = SysLogHandler(address='/dev/log')
         self.formatter = logging.Formatter('%(name)s: %(message)s')
@@ -36,6 +36,11 @@ class StatsdLog(object):
         self.statsd_port = int(conf.get('statsd_port', '8125'))
         self.listen_addr = conf.get('listen_addr', '127.0.0.1')
         self.listen_port = int(conf.get('listen_port', 8126))
+        if conf.get('report_internal_stats', False) in TRUE_VALUES:
+            self.report_internal_stats = True
+        else:
+            self.report_internal_stats = False
+        self.int_stats_interval = int(conf.get('internal_stats_interval', 5))
         self.buff = int(conf.get('buffer_size', 8192))
         self.max_q_size = int(conf.get('max_line_backlog', 512))
         self.statsd_sample_rate = float(conf.get('statsd_sample_rate', '.5'))
@@ -69,6 +74,20 @@ class StatsdLog(object):
                 return entry
         return None
 
+    def internal_stats(self):
+        """
+        Periodically send our own stats to statsd.
+        """
+        lastcount = 0
+        lasthit = 0
+        while True:
+            eventlet.sleep(self.int_stats_interval)
+            self.send_event("statsdlog.lines:%s|c" %
+                            (self.counter - lastcount))
+            lastcount = self.counter
+            self.send_event("statsdlog.hits:%s|c" % (self.hits - lasthit))
+            lasthit = self.hits
+
     def stats_print(self):
         """
         Periodically dump some stats to the logs.
@@ -76,17 +95,17 @@ class StatsdLog(object):
         lastcount = 0
         lasthit = 0
         while True:
-            eventlet.sleep(60)
-            lps = (self.counter - lastcount) / 10
-            hps = (self.hits - lasthit) / 10
+            eventlet.sleep(2)
+            lps = (self.counter - lastcount) / 60
+            hps = (self.hits - lasthit) / 60
             lastcount = self.counter
             lasthit = self.hits
             self.logger.info('per second: %d lines - hits %d' % (lps, hps))
-            self.logger.info('totals: %d hits - %d lines' % \
-                (self.hits, self.counter))
+            self.logger.info('totals: %d hits - %d lines' %
+                             (self.hits, self.counter))
             if self.skip_counter is not 0:
-                self.logger.info('Had to skip %d log lines so far' % \
-                    self.skip_counter)
+                self.logger.info('Had to skip %d log lines so far' %
+                                 self.skip_counter)
 
     def send_event(self, payload):
         """
@@ -95,8 +114,8 @@ class StatsdLog(object):
         :param payload: The payload of the udp packet to send.
         """
         try:
-            self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.udp_socket.sendto(payload, self.statsd_addr)
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_socket.sendto(payload, self.statsd_addr)
         except Exception:
             #udp sendto failed (socket already in use?), but thats ok
             self.logger.error("Error trying to send statsd event")
@@ -112,7 +131,7 @@ class StatsdLog(object):
             if random() <= self.statsd_sample_rate:
                 for item in stats:
                     payload = "%s:%s|c|@%s" % (item, delta,
-                        self.statsd_sample_rate)
+                                               self.statsd_sample_rate)
                     self.send_event(payload)
         else:
             for item in stats:
@@ -169,6 +188,8 @@ class StatsdLog(object):
         eventlet.spawn_n(self.worker)
         if self.debug:
             eventlet.spawn_n(self.stats_print)
+        if self.report_internal_stats:
+            eventlet.spawn_n(self.internal_stats)
         while True:
             try:
                 self.listener()
@@ -195,9 +216,9 @@ def run_server():
     '''
     args = optparse.OptionParser(usage)
     args.add_option('--foreground', '-f', action="store_true",
-        help="Run in foreground")
+                    help="Run in foreground")
     args.add_option('--conf', default="./statsdlogd.conf",
-        help="path to config. default = ./statsdlogd.conf")
+                    help="path to config. default = ./statsdlogd.conf")
     options, arguments = args.parse_args()
 
     if len(sys.argv) <= 1:

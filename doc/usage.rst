@@ -1,4 +1,0 @@
-Usage
-=====
-
-.. include :: ../README.md
