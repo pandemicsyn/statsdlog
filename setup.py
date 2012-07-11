@@ -14,7 +14,7 @@ setup(
     version = version,
     author = "Florian Hines",
     author_email = "syn@ronin.io",
-    description = "statsdlog",
+    description = "generate statsd events by monitoring a syslog udp stream",
     license = "Apache License, (2.0)",
     keywords = "statsd syslog",
     url = "http://github.com/pandemicsyn/statsdlog",

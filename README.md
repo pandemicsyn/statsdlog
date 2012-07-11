@@ -22,19 +22,36 @@ statsdlog sample config:
     # file that contains your log search patterns and statsd event names
     patterns_file = /etc/statsdlog/patterns.json
 
+ - Copy etc/statsdlog/patterns.json to /etc/statsdlog/patterns.json
  - Edit patterns.json to include the regex patterns for log lines you want to fire events for.
- - Point the conf file to your statsd host
+ - Copy etc/statsdlog/statsdlog.conf-sample to /etc/statsdlog/statsdlog.conf
+ - Edit the the conf file to point to your statsd host
  - Point syslog udp stream to 127.0.0.1:8126
- - Profit
+ - ``python bin/statsdlog-server --conf=/etc/statsdlog/statsdlog.conf start``
+ - Profit!
 
 Its important to note that the first match wins. An event will only be fired for the first match.
 
 The included patterns.json example includes a few patterns for errors commonly encountered when running [swift](http://github.com/openstack/swift)
 
+### Installing ###
+
+via setup.py:
+
+ - ``git clone git://github.com/pandemicsyn/statsdlog.git``
+ - ``cd statsdlog``
+ - ``python setup.py install``
+
+etc/statsdlog/statsdlog.init is available as a simple init script.
+
+via pip (No sample configs or init script. Just the goods!):
+
+ - ``pip install statsdlog``
+
 ### Building packages ###
 
 Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install stdeb):
-    
+
     git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.5
     cd statsdlog-0.0.5
     git checkout 0.0.5
