@@ -1,4 +1,4 @@
-# statsdlog #
+# statsdlog - [![Build Status](https://secure.travis-ci.org/pandemicsyn/statsdlog.png?branch=master)](https://travis-ci.org/pandemicsyn/statsdlog)
 
 Simple daemon that consumes a syslog udp stream and generates statsd events when certain log lines are encountered.
 
