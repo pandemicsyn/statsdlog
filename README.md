@@ -52,8 +52,8 @@ via pip (No sample configs or init script. Just the goods!):
 
 Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install stdeb):
 
-    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.5
-    cd statsdlog-0.0.5
-    git checkout 0.0.5
+    git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.6
+    cd statsdlog-0.0.6
+    git checkout 0.0.6
     python setup.py --command-packages=stdeb.command bdist_deb
-    dpkg -i deb_dist/python-statsdlog_0.0.5-1_all.deb
+    dpkg -i deb_dist/python-statsdlog_0.0.6-1_all.deb

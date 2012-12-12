@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from ConfigParser import ConfigParser, RawConfigParser
+from signal import SIGTERM
 import atexit
+import time
 import sys
 import os
 
@@ -157,3 +159,15 @@ class Daemon:
             message = "pidfile %s does not exist. Daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
             return  # not an error in a restart
+        try:
+                while 1:
+                        os.kill(pid, SIGTERM)
+                        time.sleep(0.1)
+        except OSError, err:
+                err = str(err)
+                if err.find("No such process") > 0:
+                        if os.path.exists(self.pidfile):
+                                os.remove(self.pidfile)
+                else:
+                        print str(err)
+                        sys.exit(1)
