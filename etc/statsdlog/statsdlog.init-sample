@@ -11,17 +11,17 @@
 # Description:       starts the statsdlog server using start-stop-daemon
 ### END INIT INFO
 
-STASDPY_USER=nast
+STASDPY_USER="syslog"
 
 # Carry out specific functions when asked to by the system
 case "$1" in
     start)
         echo "Starting statsdlog "
-        su $STATSDPY_USR -c "/usr/bin/statsdlog-server start --conf=/etc/statsdlog/statsdlog.conf"
+        su $STATSDPY_USER -c "/usr/bin/statsdlog-server start --conf=/etc/statsdlog/statsdlog.conf"
         ;;
     stop)
         echo "Stopping statsdlog"
-        su $STATSDPY_USR -c "/usr/bin/statsdlog-server stop --conf=/etc/statsdlog/statsdlog.conf"
+        su $STATSDPY_USER -c "/usr/bin/statsdlog-server stop --conf=/etc/statsdlog/statsdlog.conf"
         ;;
     *)
         echo "Usage: /etc/init.d/statsdlog {start|stop}"
