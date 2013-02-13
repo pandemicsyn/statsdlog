@@ -34,6 +34,10 @@ Its important to note that the first match wins. An event will only be fired for
 
 The included patterns.json example includes a few patterns for errors commonly encountered when running [swift](http://github.com/openstack/swift)
 
+### Requirements ###
+
+- eventlet
+
 ### Installing ###
 
 via setup.py:
@@ -50,7 +54,7 @@ via pip (No sample configs or init script. Just the goods!):
 
 ### Building packages ###
 
-Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install stdeb):
+Clone the version you want and build the package with [stdeb](https://github.com/astraw/stdeb "stdeb") (sudo apt-get install python-stdeb):
 
     git clone git@github.com:pandemicsyn/statsdlog.git statsdlog-0.0.6
     cd statsdlog-0.0.6
