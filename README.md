@@ -49,11 +49,12 @@ via setup.py:
  - ``cd statsdlog``
  - ``python setup.py install``
 
-via pip (Sample configs get dropped in usr/share/doc/statsdlog):
+etc/statsdlog/statsdlog.init is available as a simple init script. You may need to update it to point to /usr/local/bin/ if installing via pip or setup.py.
+
+via pip:
 
  - ``pip install statsdlog``
 
-etc/statsdlog/statsdlog.init is available as a simple init script. You may need to update it to point to /usr/local/bin/ if installing via pip or setup.py.
 
 ### Building packages ###
 
