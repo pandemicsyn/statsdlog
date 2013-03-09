@@ -1,0 +1,5 @@
+{
+"sysauth.ssh.failure": ".*sshd.*Failed password.*",
+"sysauth.sudo.user.bob": ".*sudo.*session opened for user root by bob.*",
+"sysauth.sudo.failure": ".*sudo.* 3 incorrect password attempts.*"
+}

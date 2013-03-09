@@ -1,3 +1,6 @@
+"""
+Simple server to monitor a syslog udp stream for events to fire at statsd
+"""
 import eventlet
 from eventlet.green import socket
 from eventlet.queue import Queue
@@ -16,6 +19,7 @@ import re
 
 
 class StatsdLog(object):
+    """Simple server to monitor a syslog udp stream for statsd events"""
 
     def __init__(self, conf):
         TRUE_VALUES = set(('true', '1', 'yes', 'on', 't', 'y'))
@@ -36,7 +40,7 @@ class StatsdLog(object):
         self.statsd_port = int(conf.get('statsd_port', '8125'))
         self.listen_addr = conf.get('listen_addr', '127.0.0.1')
         self.listen_port = int(conf.get('listen_port', 8126))
-        if conf.get('report_internal_stats', False) in TRUE_VALUES:
+        if conf.get('report_internal_stats', True) in TRUE_VALUES:
             self.report_internal_stats = True
         else:
             self.report_internal_stats = False
@@ -49,7 +53,8 @@ class StatsdLog(object):
         self.hits = 0
         self.q = Queue(maxsize=self.max_q_size)
         # key: regex
-        self.patterns_file = conf.get('patterns_file', 'patterns.json')
+        self.patterns_file = conf.get('patterns_file',
+                                      '/etc/statsdlog/patterns.json')
         try:
             with open(self.patterns_file) as pfile:
                 self.patterns = json.loads(pfile.read())
@@ -211,6 +216,7 @@ class StatsdLogd(Daemon):
 
 
 def run_server():
+    """stat/stop/restart server"""
     usage = '''
     %prog start|stop|restart [--conf=/path/to/some.conf] [--foreground|-f]
     '''
@@ -221,8 +227,10 @@ def run_server():
                     help="path to config. default = ./statsdlogd.conf")
     options, arguments = args.parse_args()
 
-    if len(sys.argv) <= 1:
+
+    if len(arguments) != 1:
         args.print_help()
+        sys.exit(1)
 
     if options.foreground:
         conf = readconf(options.conf)
@@ -230,15 +238,16 @@ def run_server():
         tap.start()
         sys.exit(0)
 
-    if len(sys.argv) >= 2:
-        daemon = StatsdLogd('/tmp/statsdlogd.pid')
-        if 'start' == sys.argv[1]:
-            conf = readconf(options.conf)
+    if len(sys.argv) >= 1:
+        conf = readconf(options.conf)
+        user = conf['main'].get('user', 'nobody')
+        daemon = StatsdLogd('/var/run/statsdlogd.pid', user=user)
+        if 'start' == arguments[0]:
             daemon.start(conf['main'])
-        elif 'stop' == sys.argv[1]:
+        elif 'stop' == arguments[0]:
             daemon.stop()
-        elif 'restart' == sys.argv[1]:
-            daemon.restart()
+        elif 'restart' == arguments[0]:
+            daemon.restart(conf['main'])
         else:
             args.print_help()
             sys.exit(2)

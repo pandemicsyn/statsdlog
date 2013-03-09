@@ -1,0 +1,5 @@
+{
+"error.nginx.connect.upstream": ".*connect.*failed.*while connecting to upstream.*",
+"error.nginx.workererror": ".*worker process.*cannot be respawned",
+"error.nginx.outofworkers": ".* worker_connections are not enough"
+}

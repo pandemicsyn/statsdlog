@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from ConfigParser import ConfigParser, RawConfigParser
-from signal import SIGTERM
-import atexit
-import time
-import sys
 import os
+import pwd
+import sys
+import atexit
+from time import sleep
+from signal import SIGTERM
+from ConfigParser import ConfigParser, RawConfigParser
 
 
 #stolen from swfit.common.utils
@@ -57,7 +58,6 @@ def readconf(conffile, section_name=None, log_name=None, defaults=None,
     return conf
 
 
-#http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 class Daemon:
     """
     A generic daemon class.
@@ -66,11 +66,13 @@ class Daemon:
     """
 
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null',
-                 stderr='/dev/null'):
+                 stderr='/dev/null', user=None, group=None):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.pidfile = pidfile
+        self.uid = user
+        self.gid = group
 
     def daemonize(self):
         """
@@ -107,19 +109,33 @@ class Daemon:
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = file(self.stdin, 'r')
-        so = file(self.stdout, 'a+')
-        se = file(self.stderr, 'a+', 0)
-        os.dup2(si.fileno(), sys.stdin.fileno())
-        os.dup2(so.fileno(), sys.stdout.fileno())
-        os.dup2(se.fileno(), sys.stderr.fileno())
+        stin = file(self.stdin, 'r')
+        stout = file(self.stdout, 'a+')
+        sterr = file(self.stderr, 'a+', 0)
+        os.dup2(stin.fileno(), sys.stdin.fileno())
+        os.dup2(stout.fileno(), sys.stdout.fileno())
+        os.dup2(sterr.fileno(), sys.stderr.fileno())
 
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
         file(self.pidfile, 'w+').write("%s\n" % pid)
+        user = pwd.getpwnam(self.uid)
+        if os.geteuid() == 0:
+            os.setgroups([])
+        os.setgid(user[3])
+        os.setuid(user[2])
+        os.environ['HOME'] = user[5]
+        try:
+            os.setsid()
+        except OSError:
+            pass
+        os.chdir(
+            '/')  # in case you need to rmdir on where you started the daemon
+        os.umask(022)  # ensure files are created with the correct privileges
 
     def delpid(self):
+        """Remove pid file"""
         os.remove(self.pidfile)
 
     def start(self, *args, **kw):
@@ -159,15 +175,21 @@ class Daemon:
             message = "pidfile %s does not exist. Daemon not running?\n"
             sys.stderr.write(message % self.pidfile)
             return  # not an error in a restart
+
         try:
-                while 1:
-                        os.kill(pid, SIGTERM)
-                        time.sleep(0.1)
+            while 1:
+                os.kill(pid, SIGTERM)
+                sleep(0.1)
         except OSError, err:
-                err = str(err)
-                if err.find("No such process") > 0:
-                        if os.path.exists(self.pidfile):
-                                os.remove(self.pidfile)
-                else:
-                        print str(err)
-                        sys.exit(1)
+            err = str(err)
+            if err.find("No such process") > 0:
+                if os.path.exists(self.pidfile):
+                    os.remove(self.pidfile)
+            else:
+                print str(err)
+                sys.exit(1)
+
+    def restart(self, *args, **kw):
+        """Restart the daemon"""
+        self.stop()
+        self.start(*args, **kw)

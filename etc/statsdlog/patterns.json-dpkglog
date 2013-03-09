@@ -1,0 +1,4 @@
+{
+"dpkg.django.installed": ".*status installed python-django .*",
+"dpkg.installed": ".*status installed.*"
+}

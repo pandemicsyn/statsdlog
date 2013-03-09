@@ -9,6 +9,16 @@ except ImportError:
 
 name = "statsdlog"
 
+data_files = [('share/doc/statsdlog',
+               ['README.md',
+                'etc/statsdlog/patterns.json',
+                'etc/statsdlog/patterns.json-authlog',
+                'etc/statsdlog/patterns.json-dpkglog',
+                'etc/statsdlog/patterns.json-nginx',
+                'etc/statsdlog/patterns.json-openstackswift',
+                'etc/statsdlog/statsdlog.conf-sample',
+                'etc/statsdlog/statsdlog.init-sample'])]
+
 setup(
     name = name,
     version = version,
@@ -16,7 +26,7 @@ setup(
     author_email = "syn@ronin.io",
     description = "generate statsd events by monitoring a syslog udp stream",
     license = "Apache License, (2.0)",
-    keywords = "statsd syslog",
+    keywords = "statsd syslog graphite",
     url = "http://github.com/pandemicsyn/statsdlog",
     packages=find_packages(),
     classifiers=[
@@ -27,5 +37,6 @@ setup(
         'Environment :: No Input/Output (Daemon)',
         ],
     install_requires=install_requires,
-    scripts=['bin/statsdlog-server']
+    scripts=['bin/statsdlog-server'],
+    data_files = data_files,
     )

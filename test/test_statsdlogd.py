@@ -10,7 +10,7 @@ class testit(unittest.TestCase):
     @patch('__builtin__.open')
     def _sdl_init(self, open_mock):
         file_contents = '{"one": "something.*"}'
-        file_path = 'patterns.json'
+        file_path = '/etc/statsdlog/patterns.json'
         context_manager_mock = Mock()
         open_mock.return_value = context_manager_mock
         file_mock = Mock()
