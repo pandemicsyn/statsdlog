@@ -1,4 +1,4 @@
-# statsdlog - [![Build Status](http://drone.ronin.io/github.com/pandemicsyn/statsdlog/status.svg?branch=master)](http://drone.ronin.io/github.com/pandemicsyn/statsdlog)
+# statsdlog
 
 Simple daemon that consumes a syslog udp stream and generates statsd events when certain log lines are encountered.
 
