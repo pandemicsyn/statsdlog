@@ -19,6 +19,7 @@ import re
 
 
 class StatsdLog(object):
+
     """Simple server to monitor a syslog udp stream for statsd events"""
 
     def __init__(self, conf):
@@ -30,20 +31,13 @@ class StatsdLog(object):
         self.formatter = logging.Formatter('%(name)s: %(message)s')
         self.syslog.setFormatter(self.formatter)
         self.logger.addHandler(self.syslog)
-
-        if conf.get('debug', False) in TRUE_VALUES:
-            self.debug = True
-        else:
-            self.debug = False
-
+        self.debug = conf.get('debug', 'false').lower() in TRUE_VALUES
         self.statsd_host = conf.get('statsd_host', '127.0.0.1')
         self.statsd_port = int(conf.get('statsd_port', '8125'))
         self.listen_addr = conf.get('listen_addr', '127.0.0.1')
         self.listen_port = int(conf.get('listen_port', 8126))
-        if conf.get('report_internal_stats', True) in TRUE_VALUES:
-            self.report_internal_stats = True
-        else:
-            self.report_internal_stats = False
+        self.report_internal_stats = conf.get('report_internal_stats',
+                                              'true').lower() in TRUE_VALUES
         self.int_stats_interval = int(conf.get('internal_stats_interval', 5))
         self.buff = int(conf.get('buffer_size', 8192))
         self.max_q_size = int(conf.get('max_line_backlog', 512))
@@ -55,17 +49,46 @@ class StatsdLog(object):
         # key: regex
         self.patterns_file = conf.get('patterns_file',
                                       '/etc/statsdlog/patterns.json')
+        self.json_patterns = conf.get('json_pattern_file',
+                                      'true').lower() in TRUE_VALUES
         try:
-            with open(self.patterns_file) as pfile:
-                self.patterns = json.loads(pfile.read())
+            self.patterns = self.load_patterns()
         except Exception as err:
-            self.logger.critical(err)
-            print err
+            self.logger.exception(err)
+            print "Encountered exception at startup: %s" % err
             sys.exit(1)
         self.statsd_addr = (self.statsd_host, self.statsd_port)
         self.comp_patterns = {}
         for item in self.patterns:
             self.comp_patterns[item] = re.compile(self.patterns[item])
+
+    def load_patterns(self):
+        if self.json_patterns:
+            self.logger.info("Using json based patterns file: %s" %
+                             self.patterns_file)
+            with open(self.patterns_file) as pfile:
+                return json.loads(pfile.read())
+        else:
+            self.logger.info("Using plain text patterns file: %s" %
+                             self.patterns_file)
+        patterns = {}
+        with open(self.patterns_file) as f:
+            for line in f:
+                if line:
+                    pattern = [x.strip() for x in line.split("=", 1)]
+                else:
+                    pattern = None
+                if len(pattern) != 2:
+                    # skip this line
+                    self.logger.error(
+                        "Skipping pattern. Unable to parse: %s" % line)
+                else:
+                    if pattern[0] and pattern[1]:
+                        patterns[pattern[0]] = pattern[1]
+                    else:
+                        self.logger.error(
+                            "Skipping pattern. Unable to parse: %s" % line)
+        return patterns
 
     def check_line(self, line):
         """
@@ -122,7 +145,7 @@ class StatsdLog(object):
             udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             udp_socket.sendto(payload, self.statsd_addr)
         except Exception:
-            #udp sendto failed (socket already in use?), but thats ok
+            # udp sendto failed (socket already in use?), but thats ok
             self.logger.error("Error trying to send statsd event")
 
     def statsd_counter_increment(self, stats, delta=1):
@@ -226,7 +249,6 @@ def run_server():
     args.add_option('--conf', default="./statsdlogd.conf",
                     help="path to config. default = ./statsdlogd.conf")
     options, arguments = args.parse_args()
-
 
     if len(arguments) != 1:
         args.print_help()

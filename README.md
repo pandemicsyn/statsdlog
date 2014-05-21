@@ -1,4 +1,4 @@
-# statsdlog - [![Build Status](https://secure.travis-ci.org/pandemicsyn/statsdlog.png?branch=master)](https://travis-ci.org/pandemicsyn/statsdlog)
+# statsdlog - [![Build Status](http://drone.ronin.io/github.com/pandemicsyn/statsdlog/status.svg?branch=master)](http://drone.ronin.io/github.com/pandemicsyn/statsdlog)
 
 Simple daemon that consumes a syslog udp stream and generates statsd events when certain log lines are encountered.
 
@@ -23,6 +23,12 @@ statsdlog sample config:
     #internal_stats_interval = 5
     # file that contains your log search patterns and statsd event names
     patterns_file = /etc/statsdlog/patterns.json
+    # json_pattern_file = true
+    #
+    # alternatively instead of using a json based patterns file you can use a
+    # a plain text format:
+    # patterns_file = /etc/statsdlog/patterns.conf
+    # json_pattern_file = false
 
  - Copy etc/statsdlog/patterns.json to /etc/statsdlog/patterns.json
  - Edit patterns.json to include the regex patterns for log lines you want to fire events for.
