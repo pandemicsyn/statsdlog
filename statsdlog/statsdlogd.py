@@ -101,10 +101,7 @@ class StatsdLog(object):
         for entry in self.comp_patterns:
             if self.comp_patterns[entry].match(line):
                 stat_matches.append(entry)
-        if len(stat_matches) != 0:
-            return stat_matches
-        else:
-            return None
+        return stat_matches
 
     def internal_stats(self):
         """
@@ -177,15 +174,12 @@ class StatsdLog(object):
         while True:
             msg = self.q.get()
             matched = self.check_line(msg)
-            if matched:
-                for stat_entry in matched:
-                    self.statsd_counter_increment([stat_entry])
-                    if self.hits >= maxint:
-                        self.logger.info("hit maxint, reset hits counter")
-                        self.hits = 0
-                    self.hits += 1
-            else:
-                pass
+            for stat_entry in matched:
+                self.statsd_counter_increment([stat_entry])
+                if self.hits >= maxint:
+                    self.logger.info("hit maxint, reset hits counter")
+                    self.hits = 0
+                self.hits += 1
 
     def listener(self):
         """
