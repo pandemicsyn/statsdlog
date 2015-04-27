@@ -97,11 +97,11 @@ class StatsdLog(object):
         :param line: The string to check
         :returns: None or list of regex entries that matched
         """
-        stat_matches = []
+        matches = []
         for entry in self.comp_patterns:
             if self.comp_patterns[entry].match(line):
-                stat_matches.append(entry)
-        return stat_matches
+                matches.append(entry)
+        return matches
 
     def internal_stats(self):
         """
@@ -173,9 +173,9 @@ class StatsdLog(object):
         """
         while True:
             msg = self.q.get()
-            matched = self.check_line(msg)
-            for stat_entry in matched:
-                self.statsd_counter_increment([stat_entry])
+            matches = self.check_line(msg)
+            for match in matches:
+                self.statsd_counter_increment([match])
                 if self.hits >= maxint:
                     self.logger.info("hit maxint, reset hits counter")
                     self.hits = 0
