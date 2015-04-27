@@ -95,7 +95,7 @@ class StatsdLog(object):
         Check if a line matches our search patterns.
 
         :param line: The string to check
-        :returns: None or list of regex entries that matched
+        :returns: List of regex entries that matched (or empty list if none)
         """
         matches = []
         for entry in self.comp_patterns:
