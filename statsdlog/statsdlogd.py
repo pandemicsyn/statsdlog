@@ -95,12 +95,13 @@ class StatsdLog(object):
         Check if a line matches our search patterns.
 
         :param line: The string to check
-        :returns: None or regex entry that matched
+        :returns: List of regex entries that matched (or empty list if none)
         """
+        matches = []
         for entry in self.comp_patterns:
             if self.comp_patterns[entry].match(line):
-                return entry
-        return None
+                matches.append(entry)
+        return matches
 
     def internal_stats(self):
         """
@@ -172,15 +173,13 @@ class StatsdLog(object):
         """
         while True:
             msg = self.q.get()
-            matched = self.check_line(msg)
-            if matched:
-                self.statsd_counter_increment([matched])
+            matches = self.check_line(msg)
+            for match in matches:
+                self.statsd_counter_increment([match])
                 if self.hits >= maxint:
                     self.logger.info("hit maxint, reset hits counter")
                     self.hits = 0
                 self.hits += 1
-            else:
-                pass
 
     def listener(self):
         """
