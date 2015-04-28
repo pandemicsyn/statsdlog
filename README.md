@@ -39,7 +39,7 @@ statsdlog sample config:
  - ``sudo python bin/statsdlog-server --conf=/etc/statsdlog/statsdlog.conf start`` (or use the the included init script)
  - Profit!
 
-Its important to note that the first match wins. An event will only be fired for the first match.
+Its important to note that the first match NO LONGER wins. As of v0.1.1 an event will be fired for EACH line match. This means a single log line can generate multiple events.
 
 The included patterns.json-openstackswift example includes a few patterns for errors commonly encountered when running [swift](http://github.com/openstack/swift). There are also sample patterns for things like Nginx errors, sudo/ssh failures, or package installs. statsdlog is handy for generating events for all the things you want to track that do not natively support statsd.
 

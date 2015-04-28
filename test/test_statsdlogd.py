@@ -9,7 +9,7 @@ class testit(unittest.TestCase):
 
     @patch('__builtin__.open')
     def _sdl_init(self, open_mock):
-        file_contents = '{"one": "something.*"}'
+        file_contents = '{"one": "something.*", "two": "some.*"}'
         file_path = '/etc/statsdlog/patterns.json'
         context_manager_mock = Mock()
         open_mock.return_value = context_manager_mock
@@ -22,9 +22,13 @@ class testit(unittest.TestCase):
         setattr( context_manager_mock, '__exit__', exit_mock )
         result = StatsdLog(conf={'debug': 'y'})
         self.assertEquals(open_mock.call_args, call(file_path))
-        self.assertEquals(result.patterns, {'one': 'something.*'})
+        self.assertEquals(result.patterns, {'one': 'something.*', 'two': 'some.*'})
         return result
 
     def test_check_line(self):
-        self.assertEquals(self.sdl.check_line('no matches'), None)
-        self.assertEquals(self.sdl.check_line('something matches'), 'one')
+        self.assertEquals(self.sdl.check_line('no matches'), [])
+        self.sdl.check_line('something matches')
+        self.assertEquals(sorted(self.sdl.check_line('something matches')), sorted(["one", "two"]))
+
+if __name__ == '__main__':
+    unittest.main()
